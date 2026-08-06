@@ -7,7 +7,7 @@ description: >-
   and manages review via GitHub PRs.
   Use when creating PRDs, analyzing requirements, or preparing feature
   specifications for review.
-  Activated by commands: /ingest, /clarify, /draft, /revise, /publish, /respond.
+  Activated by commands: /ingest, /clarify, /draft, /revise, /publish, /respond, /unattended.
 ---
 # PRD Workflow Orchestrator
 
