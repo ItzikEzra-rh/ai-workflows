@@ -1,0 +1,225 @@
+---
+name: draft
+description: Generate the PRD from clarified requirements using the template and section guidance.
+---
+
+# Draft PRD Skill
+
+You are writing from a Product Manager's perspective.
+Your job is to synthesize the ingested requirements and clarification
+answers into a structured PRD that describes user-facing capabilities
+and outcomes.
+
+## Your Role
+
+Read the source material, apply the template structure, follow the section
+guidance, and produce a PRD that accurately represents what users need to
+be able to do and experience. Every statement must be traceable to the
+source material. Keep the focus on user stories and capabilities — design
+details (API fields, internal architecture, code-level mechanisms) belong
+in design documents, not the PRD.
+
+## Critical Rules
+
+- **Do not invent requirements.** Every claim in the PRD must come from `01-requirements.md`, `02-clarifications.md`, or direct user instruction.
+- **Follow the template.** Use the template resolved in Step 1 (project override or workflow default). Do not add sections without user approval.
+- **Omit optional sections.** If the section guidance marks a section as optional and the source material provides no relevant content, omit the section rather than filling it with a placeholder or explanation of why it's empty.
+- **Keep numbering sequential.** When optional sections or subsections are omitted, renumber the remaining sections so there are no gaps. For example, if subsection 2.2 (Success Metrics) is omitted, Non-Goals becomes 2.2 instead of 2.3. If section 5 (Assumptions) is omitted, Dependencies becomes 5, Risks becomes 6, and so on.
+- **Follow the section guidance.** Use the section guidance resolved in Step 1 for content standards.
+- **Mark gaps.** If information for a section is unavailable, write "To be determined — {what's needed}" rather than fabricating content.
+- **Preserve terminology.** Use the user's domain language, not generic product management jargon.
+
+## Process
+
+### Step 1: Locate the Template
+
+Read and follow `../../_shared/recipes/template-override-resolution.md`
+with `WORKFLOW=prd`, `TEMPLATE_FILE=prd.md`.
+
+### Step 2: Read Source Material
+
+Read these files in order:
+1. `.artifacts/prd/{issue-key}/01-requirements.md` (raw requirements)
+2. `.artifacts/prd/{issue-key}/02-clarifications.md` (clarification log, if exists)
+3. The PRD template (from Step 1)
+4. The section guidance (from Step 1)
+
+### Step 3: Map Requirements to Sections
+
+Before writing, create a mental map:
+- Which requirements feed into which template sections?
+- Which clarification answers resolved ambiguities that affect specific sections?
+- Where are the remaining gaps (sections that will need "TBD" markers)?
+
+### Step 4: Write the PRD
+
+Generate the PRD following the template structure. For each section:
+
+1. Read the section guidance for that section
+2. Draw content from the source material
+3. Apply the quality standards (measurable goals, testable requirements, user-verifiable acceptance criteria)
+4. If source material includes design details (API fields, internal architecture, code-level mechanisms), elevate them to the user-facing capability they support rather than transcribing the design detail into the PRD. Constraints that users directly encounter (input validation rules, length limits, allowed values, format restrictions) are user-facing requirements, not design details — preserve them.
+5. Tag each requirement with its source marker(s) (`[Jira: EDM-2324]`, `[Clarify: R1.Q3]`, or `[User]`), following the consolidation guidance in the section guidance General Rules
+6. Flag any assumptions or judgment calls with an inline note: `[Assumption: ...]`
+
+**Incorporating clarifications:** When a clarification changed the scope
+or corrected an assumption from the source material, write the
+requirement in its corrected final form. Do not describe what the
+original source said, what was removed, or why a previous position was
+abandoned. Do not create sections or non-goals whose sole purpose is to
+state what the PRD does **not** include. The clarification log
+(`02-clarifications.md`) preserves the editorial history; the PRD states
+the current position as if it was always the intent.
+
+**Requirement IDs:** Assign a stable sequential ID to each functional
+requirement in Section 3.1 (e.g., FR-1, FR-2, FR-3) and each
+non-functional requirement in Section 3.2 (e.g., NFR-1, NFR-2, NFR-3).
+These IDs enable traceability — acceptance criteria, design decisions,
+and task breakdowns can reference specific requirements by ID rather
+than by description.
+
+Fill in the metadata table:
+- **Author(s):** The human who owns or requested this feature — never
+  the AI assistant. Derive from `git config user.name` if available;
+  otherwise ask the user before continuing.
+- **Jira:** Link to the source Feature issue (e.g., `https://redhat.atlassian.net/browse/EDM-1471`)
+- **Date:** Today's date
+
+**Owner fields (Risks, Open Questions):** When populating Owner fields,
+derive the owner from the source material (e.g., the responsible team
+evident from the Jira ticket or requirement context). If the owner is
+not evident, write "To be determined" — do not default to the document's
+Author(s). Step 6 will prompt the user to resolve any missing owners.
+
+### Step 5: Verify Coverage
+
+Before self-review, systematically verify that nothing was lost between
+source material and PRD:
+
+1. **Requirements coverage:** Re-read `01-requirements.md`. For each
+   requirement or acceptance criterion in the source, confirm it appears
+   in the PRD (Sections 3 or 4). If a requirement has no corresponding
+   entry, either add it or mark it "TBD" with a reason.
+
+2. **Clarification incorporation:** Re-read `02-clarifications.md`. For
+   each answered question, confirm the answer is reflected in the PRD.
+   Pay particular attention to answers that changed scope or added
+   constraints.
+
+3. **Locked decisions:** If `02-clarifications.md` contains a "Locked
+   Decisions" section, verify every locked decision (D1, D2, etc.) is
+   faithfully represented in the PRD. These are non-negotiable — if a
+   locked decision conflicts with other content, rewrite the content
+   to reflect the decided position. Do not annotate what was removed
+   or why — the clarification log preserves the decision history; the
+   PRD reads as if the clarified position was always the intent.
+
+4. **Traceability completeness:** Every functional requirement in
+   Section 3.1 should have a stable ID (FR-N) and every non-functional
+   requirement in Section 3.2 should have a stable ID (NFR-N). Each
+   requirement should have at least one source marker. Flag any that
+   don't.
+
+5. **Assumptions coverage:** Confirm that any unverified preconditions
+   surfaced during clarification or implicit in the source material are
+   captured in the Assumptions section. If no unverified preconditions
+   exist, the section should be omitted.
+
+If this step introduces new `[Assumption: ...]` markers or TBD items,
+Step 6 will collect and resolve them.
+
+### Step 6: Resolve Outstanding Items
+
+Before the PRD can be saved, the author must validate every assumption
+and outstanding item. Collect the following from the document:
+
+1. Every `[Assumption: ...]` marker
+2. Every "To be determined" item
+3. Every risk in the Risks section that lacks an owner or mitigation
+4. Every open question in the Open Questions section that lacks an owner or impact
+
+If there are no items across all four categories, skip to Step 7.
+
+Present the items to the user in conversation:
+
+1. **Assumptions:** Collect every `[Assumption: ...]` marker from the
+   document. List each with its section reference and the assumption text.
+2. **TBD markers:** List any "To be determined" items with their section
+   references.
+3. **Unowned risks:** List any risks from the Risks section that lack an owner
+   or mitigation.
+4. **Unowned open questions:** List any open questions from the Open Questions section
+   that lack an owner or impact.
+
+Ask the user to confirm, correct, or provide missing information for each
+item. Then apply the resolutions:
+
+- **Confirmed assumptions:** Rewrite the statement in its final form and
+  remove the `[Assumption: ...]` marker.
+- **Corrected assumptions:** Rewrite with the corrected information and
+  remove the marker.
+- **Resolved TBDs:** Replace the "To be determined" text with the
+  provided content.
+- **Items the user cannot resolve now:** Leave TBD markers or open
+  questions in place — these are genuine gaps, not drafting artifacts.
+
+After this step, the document should contain no `[Assumption: ...]`
+markers. Any remaining TBD markers or open questions represent real
+unknowns, not unvalidated AI judgment calls.
+
+### Step 7: Self-Review
+
+Before presenting the PRD, verify:
+- [ ] Every functional requirement has a stable ID (FR-1, FR-2, ...) and a source marker — or traces to the primary Jira issue linked in the metadata table (per the consolidation rule)
+- [ ] Every non-functional requirement has a stable ID (NFR-1, NFR-2, ...) and a source marker — or traces to the primary Jira issue
+- [ ] Goals are measurable outcomes, not activities
+- [ ] Acceptance criteria are testable assertions, not activities
+- [ ] Every included section has substantive content (use "TBD" markers for expected-but-unavailable content)
+- [ ] No optional sections filled with placeholder text — omit them instead
+- [ ] Terminology matches the source material
+- [ ] No unresolved `[Assumption: ...]` markers remain in the document
+- [ ] All locked decisions from clarification are reflected
+- [ ] Success Metrics table is populated when the source material provides quantifiable targets (omit the subsection otherwise)
+- [ ] No narration of editorial history — requirements are stated in final form, not as changes from a prior position
+- [ ] No design details — no specific API fields, internal architecture, code locations, or non-user-observable behavior. Every requirement describes something a user can do, see, or experience.
+- [ ] Requirements mention UI and CLI alongside the API where applicable — not API-only
+- [ ] No vague language ("appropriate", "efficient", "standard" without specifics)
+- [ ] No scope reduction language ("v2", "simplified", "placeholder", "future enhancement")
+- [ ] The document is concise — no unnecessary repetition or filler
+- [ ] The document reads coherently end-to-end
+
+### Step 8: Write Artifact
+
+Save the PRD to `.artifacts/prd/{issue-key}/03-prd.md`.
+
+### Step 8a: Capture Provenance
+
+Read and follow `../../_shared/recipes/capture-provenance-event.md` with:
+
+| Parameter | Value |
+|-----------|-------|
+| WORKFLOW | `prd` |
+| ISSUE_KEY | `{issue-key}` |
+| PHASE | `draft` |
+| AUTHORING_MODE | `skill` |
+
+### Step 9: Present to User
+
+Show the user the complete PRD and highlight:
+- Any sections still marked "TBD" that need further input
+- Any judgment calls you made in synthesizing requirements
+- Sections where the source material was particularly strong or weak
+
+## Output
+
+- `.artifacts/prd/{issue-key}/03-prd.md`
+- `.artifacts/prd/{issue-key}/provenance.json`
+
+## When This Phase Is Done
+
+Report your results:
+- The PRD has been written and saved
+- Highlight any remaining TBD sections or areas needing review
+- Note the overall confidence level in the document's completeness
+
+Then **re-read the controller** (`controller.md`) for next-step guidance.
