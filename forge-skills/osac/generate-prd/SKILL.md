@@ -175,6 +175,16 @@ remains unresolvable.
    Edge cases, Dependencies, Contradictions, Assumptions. Also check
    against applicable dimensions from Dimension Triage.
 
+   **Persona ownership test:** For each of the 4 OSAC personas, before
+   marking any as "Not affected," ask: does this persona currently perform
+   the manual process this feature automates or replaces? If yes, they are
+   a primary affected persona — write stories about what changes for them.
+
+   **Lifecycle decomposition:** For any resource, pool, or capacity being
+   introduced, enumerate all lifecycle operations a user can perform:
+   create, list/view, update/configure, scale up, scale down, delete.
+   Each operation that's in scope needs coverage in the PRD.
+
 3. For each gap, attempt self-resolution in priority order:
 
    a. **Exemplar pattern:** Do selected exemplar PRDs address a similar
@@ -252,6 +262,24 @@ Read and follow `skills/osac/generate-prd/steps/draft.md` with these overrides:
     cross-cutting concerns.
   - Follow exemplar PRDs' patterns for structure, persona grouping, and
     scope sizing.
+  - **Problem Statement:** Pain only — no solutions. Do NOT describe what
+    the feature introduces or how it works. That belongs in In Scope.
+  - **In Scope — status visibility:** For every resource or operation
+    created asynchronously, verify status tracking is addressed. Can the
+    user see the current state and failure reasons?
+  - **In Scope — billing default:** Billing, metering, and cost management
+    are platform-wide concerns. Default to Out of Scope unless billing IS
+    the feature's primary purpose.
+  - **Out of Scope — security boundary:** For features involving shared
+    physical infrastructure (bare metal, GPUs, storage backends), address
+    the tenant data boundary: what happens between assignments? If host
+    sanitization is not in scope, state it as Out of Scope with the
+    responsible service noted.
+  - **Persona-story alignment:** After writing user stories, verify each
+    story's capability matches the persona's role. Infrastructure
+    operations (sanitization, hardware lifecycle) belong to Cloud
+    Infrastructure Admin. Tenant onboarding, quotas, catalog management
+    belong to Cloud Provider Admin.
 - **Step 6 (Resolve Outstanding Items):** Skip — leave `[Assumption: ...]`
   and `[Open Question: ...]` markers in place for human resolution.
 - **Step 9 (Present to User):** Skip — proceed to Self-Review.
@@ -278,9 +306,31 @@ Score the draft against a quality rubric (5 criteria, 0-2 each, /10 total).
 | **Right-Sized** | Bundles 3+ independent capabilities | 1-2 separable capabilities | Focused, capabilities require each other |
 | **Testability** | Requirements describe internals | Some testable, some vague | Every requirement PM-verifiable |
 
-**PASS:** total >= 7/10 AND no zeros. Proceed to Session Context.
+**Additional deterministic checks (run alongside the rubric):**
 
-**FAIL:** total < 7 OR any zeros. Enter revision loop.
+1. **Persona ownership check:** For each persona marked "Not affected,"
+   verify the feature does not automate or replace a process they currently
+   perform. If it does, they need user stories — mark as a review failure.
+
+2. **Persona-story alignment check:** For each user story, verify the
+   capability matches the persona's role definition. Infrastructure
+   operations under Cloud Provider Admin, or tenant management under Cloud
+   Infrastructure Admin, is a misattribution.
+
+3. **Problem Statement solution check:** The Problem Statement must not
+   describe what the feature introduces or how it works. Search for
+   "introduces", "eliminates", "provides", "enables" used to describe the
+   feature itself. Any match is a failure.
+
+4. **Async status check:** If any In Scope item describes asynchronous
+   resource creation, verify that status/progress visibility is also
+   addressed in In Scope or User Stories.
+
+**PASS:** total >= 7/10 AND no zeros AND all deterministic checks pass.
+Proceed to Session Context.
+
+**FAIL:** total < 7 OR any zeros OR any deterministic check failed.
+Enter revision loop.
 
 ### Revise (Conditional)
 
