@@ -247,9 +247,17 @@ any of them via `/revise`.
 
 Read and follow `skills/osac/generate-prd/steps/draft.md` with these overrides:
 
+- **Step 1 (Locate the Template):** Use the OSAC PRD template at
+  `skills/osac/generate-prd/prd-template.md`. Do NOT use the generic
+  ai-workflows template. The OSAC template has exactly 6 sections:
+  Problem Statement, In Scope, Out of Scope, User Stories, Assumptions,
+  Dependencies. Do NOT add Goals/Non-Goals, FR-N/NFR-N requirement IDs,
+  Acceptance Criteria, Risks, or Open Questions sections.
 - **Step 2 (Read Source Material):** Also read the selected exemplar PRDs
   and the self-clarification log.
 - **Step 4 (Write the PRD):**
+  - **Author field:** Derive from the Jira ticket assignee or reporter
+    name. Never leave as Open Question, TBD, or "To be determined."
   - Use self-resolved gaps as if they were clarification answers. Tag
     self-resolved items with their source marker (e.g.,
     `[Exemplar: {id}]`, `[Codebase: {file}]`).
@@ -275,6 +283,13 @@ Read and follow `skills/osac/generate-prd/steps/draft.md` with these overrides:
     the tenant data boundary: what happens between assignments? If host
     sanitization is not in scope, state it as Out of Scope with the
     responsible service noted.
+  - **Persona ownership (re-check after Dimension Triage):** The Dimension
+    Triage phase may have marked personas as "Not affected" based on
+    dimension definitions alone. Before finalizing user stories, re-apply
+    the persona ownership test: does this persona currently perform the
+    manual process this feature automates? If yes, they need stories
+    regardless of what Dimension Triage concluded. This override takes
+    precedence over Dimension Triage persona assignments.
   - **Persona-story alignment:** After writing user stories, verify each
     story's capability matches the persona's role. Infrastructure
     operations (sanitization, hardware lifecycle) belong to Cloud
@@ -411,7 +426,9 @@ Then **stop**. Do not continue past the failed phase.
 
 ## Completion Report
 
-When all phases finish, output:
+When all phases finish, output the following as conversation text only.
+Do NOT write the completion report into the PRD file — it is not part of
+the PRD artifact:
 
 ```text
 ## Unattended PRD Run Complete
