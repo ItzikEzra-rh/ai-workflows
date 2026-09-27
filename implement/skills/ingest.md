@@ -22,6 +22,7 @@ approach.
 - **Read-only.** Jira access is read-only. Never create, update, or modify Jira issues.
 - **Capture, don't implement.** Record what you find — implementation decisions happen in `/plan`.
 - **Explore relevant areas only.** Don't map the entire codebase. Focus on components the story will affect.
+- **Make test requirements traceable.** For every affected component, identify the touched areas, applicable test tier and boundary, and the evidence needed to verify them. A test double does not prove a real component interaction.
 - **Note unknowns.** If you can't determine something from the codebase, say so explicitly.
 - **Re-invocation diffs before overwriting.** If `01-context.md` already exists, preserve it before exploring. After compiling new context, diff against the previous version and present changes to the user before overwriting (see Steps 2a and 7a).
 
@@ -108,7 +109,7 @@ mkdir -p .artifacts/prd
 Write `.artifacts/prd/config.json` with the validated `docs_repo_path` and
 `docs_repo_remote` (same format used by the prd and design workflows).
 
-#### 5b: Find the PRD and Design Document
+#### 5b: Find the PRD, Design Document, and Test Plan
 
 The docs repo organizes documents by Feature-level Jira issue. To find the
 right directory, walk the Jira hierarchy from the story:
@@ -139,11 +140,18 @@ Read these from the docs repo:
    architectural decisions and locked decisions incorporated as content
 2. **PRD** (`prd.md`) — the product requirements, with locked decisions
    reflected in the requirements text
+3. **Test plan** (`testplan.md`), when published alongside the design — the
+   reviewed cases and expected outcomes relevant to this story
 
-If the docs repo documents are not found, ask the user for their location
-or proceed with only the Jira story content. The design document and PRD
-are valuable context but not strictly required — the story's acceptance
-criteria are the primary contract.
+If the test plan is present, map only the cases relevant to this story's
+acceptance criteria and expected touched areas. Preserve their IDs and expected
+outcomes. A planned case is not evidence that a test exists or has passed. If
+the test plan is absent or unavailable, record that fact and use the story's
+testing approach and component guidance; do not invent case IDs or outcomes.
+
+If the PRD or design document is not found, ask the user for its location or
+proceed with only the Jira story content. The story's acceptance criteria are
+the primary contract.
 
 ### Step 6: Explore the Codebase
 
@@ -192,6 +200,8 @@ affected. Focus on:
    - How are tests organized (co-located, separate directory, both)?
    - What test helpers and harnesses exist?
    - How do integration tests get their infrastructure (auto-started, manual)?
+   - For each affected component, read its component-level test guidance or touched-area map when available. Record which story behaviors cross a component boundary and the test tier, suite/file, exact command and working directory, environment prerequisites, and which dependencies run for real versus use test doubles.
+   - If the project has no touched-area map, suitable suite, verified command, or required environment, record that gap. Do not infer a command or claim a boundary is covered by unit tests that mock it.
 
 5. **Relevant data models and APIs:**
    - What existing types and interfaces will be extended or consumed?
@@ -274,6 +284,22 @@ If this is a first invocation, write
 - **Current patterns:** {relevant patterns to follow}
 - **What changes:** {brief note on what the story requires}
 - **Existing tests:** {test file locations, test framework, patterns used}
+
+### Component Test Requirements
+
+Record each expected component/touched-area row from repository guidance and the story. Preserve acceptance-criteria and test-case references when provided.
+
+| Component / expected touched area | AC / case IDs and required behavior | Required tier and boundary | Existing suite/file or proposed location | Exact command and working directory | Real dependencies vs. test doubles | Prerequisites, gap, and owner if known |
+|-------------------------------|---------------------------|----------------------------|-----------------------------------------|-------------------------------------|----------------------------------|-----------------------|
+| {component / behavior} | {AC/case IDs and concise expected outcome} | {unit or integration; boundary} | {path or unknown} | {verified command and cwd, or unknown} | {what runs for real and what is simulated} | {prerequisite, missing evidence, follow-up owner, or none} |
+
+At ingest, these are the test requirements for the expected scope. `/plan` refines them against the proposed changes, and `/validate` reconciles them against the actual diff. For an area that needs no integration test, record the unit-only classification and why no component interaction boundary is crossed. Mark unknown commands, suites, and prerequisites as gaps; do not invent them.
+
+### Relevant Test Plan Cases
+
+| Case ID | Expected outcome | Tier / boundary | Story acceptance criterion or touched area |
+|---------|------------------|-----------------|--------------------------------------------|
+| {source case ID} | {preserved expected outcome} | {unit/integration and boundary} | {story AC / area} |
 
 ### Relevant Types and Interfaces
 

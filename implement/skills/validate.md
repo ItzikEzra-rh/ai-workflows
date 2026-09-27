@@ -22,6 +22,7 @@ and repeat until everything passes.
 - **Fix issues, don't skip them.** If linting fails, fix the code. If tests fail, diagnose and fix. Do not suppress warnings or skip checks. If the user asks to skip a failing check, evaluate the risk: explain what the failing check is testing, what behavior would go unverified if skipped, and whether skipping could mask a real bug, broken contract, or regression. Present this assessment to the user so they can make an informed decision. The user may still choose to skip, but they should understand what they're accepting.
 - **Coverage is a signal, not a target.** If coverage shows an uncovered branch in a public function, ask "Is there a behavioral contract I missed?" Write a test for the behavior, not the line.
 - **New tests follow the same standards.** Any tests added during validation must validate behavioral contracts through public interfaces — no coverage-gaming tests.
+- **Integration coverage is a hard validation gate.** Reconcile the actual diff with the Component Test Requirements in `01-context.md` and Component Coverage Matrix in `02-plan.md`. Every touched area must be classified; every required integration row must have a test and an executed, passing command. Missing coverage fails the gate; unavailable prerequisites or commands block it. Neither state can produce an overall PASS.
 - **Commit fixes separately.** Validation fixes get their own commits following the project's commit format.
 - **Do not modify code outside the story's scope** to fix pre-existing lint or test issues. Note them in the validation report.
 
@@ -35,6 +36,7 @@ Read:
 3. `.artifacts/implement/{jira-key}/04-impl-report.md` (implementation status)
 
 Extract the validation profile's pre-PR checks list.
+Also extract the per-component test requirements from `01-context.md` and the Component Coverage Matrix from `02-plan.md`. These rows are required validation evidence, even if an integration command was omitted from the generic pre-PR checklist.
 
 ### Step 2: Check Base Branch Currency
 
@@ -122,6 +124,16 @@ Typical checks (discovered, not hardcoded):
 2. If caused by the story's changes: fix it, commit the fix, re-run the check
 3. If pre-existing: note it in the validation report, do not fix it
 4. If unclear: report to the user
+
+After running the listed checks, perform the Integration Coverage Gate:
+
+1. Compare the changed components and touched behaviors in the branch diff with the context requirements and plan matrix. Add or reconcile rows for any changed area that is not accounted for.
+2. For each row, verify that the required tier and boundary are explicit. A unit-only classification must explain why the change does not cross a component interaction boundary.
+3. For each integration-required row, verify that the named test exists and exercises the stated boundary. A test double proves only the behavior around that double; it does not prove the real receiving component, persistence layer, or controller path.
+4. Use the Step 3 result when it matches the row's exact command and environment; otherwise execute each verified required integration command with its recorded working directory and prerequisites. Record the command and outcome; do not replace an unknown or unavailable command with a guessed one.
+5. Set the gate to PASS only when every changed area is accounted for and every required integration test ran and passed. Set it to FAIL when a required test is missing or failed. Set it to BLOCKED when a required test could not run because a command, environment, or prerequisite is unavailable. Missing rows or unclassified changed areas also prevent PASS.
+
+Do not recommend `/publish` or report validation PASS when the integration gate is FAIL or BLOCKED. Resolve missing tests and failures; for an infrastructure blocker, report the exact boundary that remains unverified and the prerequisite needed to rerun it.
 
 ### Step 4: Analyze Coverage
 
@@ -263,6 +275,16 @@ Write `.artifacts/implement/{jira-key}/05-validation-report.md`:
 |-------|---------|--------|-------|
 | {name} | `{command}` | {pass/fail/warning} | {brief note} |
 
+## Integration Coverage Gate
+
+**Gate result:** {PASS / FAIL / BLOCKED}
+
+| Component / touched area | AC / case IDs and expected behavior | Required tier and boundary | Suite/test file | Command and working directory | Real dependencies vs. test doubles | Execution result / gap |
+|--------------------------|---------------------------|----------------------------|-----------------|-------------------------------|----------------------------------|------------------------|
+| {component / behavior} | {AC/case IDs and concise expected outcome} | {integration + boundary, or unit-only with rationale} | {path} | {exact command and cwd, or not applicable} | {what runs for real and what is simulated} | {pass, fail, blocked, or reasoned not required} |
+
+The gate is PASS only if every changed component/touched area is represented and all required integration tests ran and passed. A missing test is FAIL; an unavailable required command or prerequisite is BLOCKED. Unit-only rows require a rationale and cannot stand in for an integration boundary.
+
 ## Coverage Analysis
 
 ### Packages Affected
@@ -337,10 +359,11 @@ Write `.artifacts/implement/{jira-key}/05-validation-report.md`:
 
 ## Result
 
-{PASS — all checks pass, coverage is comprehensive, all acceptance
- criteria satisfied, no regressions.
+{PASS — all checks pass, the Integration Coverage Gate is PASS, coverage is comprehensive, all acceptance criteria are satisfied, and no regressions were detected.
  OR
- FAIL — with explanation of what still needs fixing.}
+ FAIL — a required test or acceptance criterion is missing or failed; explain what still needs fixing.
+ OR
+ BLOCKED — required integration coverage could not be executed because a command, environment, or prerequisite is unavailable; identify the unverified boundary and what is needed to run it.}
 ```
 
 ### Step 9: Present Results
@@ -349,9 +372,12 @@ Summarize for the user:
 - Which checks passed and which failed
 - Coverage assessment (behavioral, not numeric)
 - Acceptance criteria status (all satisfied, or which ones have gaps)
+- Integration Coverage Gate result and any unverified component boundary
 - Any tests added during validation
 - Any regressions found (and whether they were fixed)
 - Overall verdict: ready for `/publish` or not
+
+Only recommend `/publish` when the Integration Coverage Gate and overall validation result are both PASS.
 
 ## Output
 

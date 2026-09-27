@@ -6,6 +6,8 @@ description: >-
   the project's CI expectations, and manages review via GitHub PRs.
   Use when implementing Jira stories produced by the design workflow.
   Activated by commands: /ingest, /plan, /revise, /code, /validate, /publish, /respond.
+metadata:
+  version: "0.1.0"
 ---
 # Implement Workflow Orchestrator
 

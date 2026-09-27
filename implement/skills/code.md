@@ -22,6 +22,7 @@ the contract. Commit each logical unit of work independently.
 - **Read before writing.** Before modifying any file, read it. Before writing tests for a package, read existing tests in that package.
 - **Tests validate contracts, not implementations.** Test through public interfaces only. Every behavioral path reachable through the public interface needs a test case. Tests should remain valid if the implementation were rewritten.
 - **Unit tests are always required. Integration tests are required when the story touches component interactions.** These are complementary — both may test the same functionality through different lenses.
+- **Complete the component coverage matrix.** Implement every required integration-test row in the plan as part of this story. Unit tests or mocks do not satisfy a required component boundary. Do not mark the related task Done while the test is missing; record a concrete blocker if the supported harness or environment is unavailable.
 - **One commit per plan task.** Each commit must follow the project's commit format (from the validation profile) and be independently meaningful. Don't batch everything into a single commit, but don't create a commit per file either — one logical unit of work per commit.
 - **Update the plan.** Mark tasks as completed in `02-plan.md` as you go. On re-invocation, check the plan to see what's already done.
 - **No scope creep.** Do not refactor adjacent code, fix unrelated bugs, or add features beyond the story. Note discoveries in the implementation report.
@@ -178,6 +179,8 @@ Write tests that define the behavioral contracts for this task:
 6. **Name tests after the contract they validate,** not after bugs
    discovered during development.
 
+Before writing code, check the Component Coverage Matrix in `02-plan.md`. For each required integration row touched by the task, add or extend the test through the named component boundary, using the listed harness and dependencies. If the test cannot be implemented because its harness or prerequisite is unavailable, update the plan and implementation report with the missing evidence; do not substitute a unit mock and claim the integration row is covered.
+
 #### 3c: Write Implementation (after tests exist)
 
 Write the production code that makes the tests from 3b pass:
@@ -197,11 +200,13 @@ Look up the test commands from the **Pre-PR Checks** section of
 `01-context.md`. Each entry has a purpose label (e.g., "unit test",
 "integration test"). Match the label to the type of tests you wrote:
 
-1. Run the unit test command for the specific package first (fast feedback)
-2. If integration tests were written, run the integration test command
+1. Run the unit test command for the specific package first (fast feedback).
+2. Run each verified integration command required by the Component Coverage Matrix for the task's touched areas.
 
 Run each test command as a separate invocation — do not chain commands.
 Fix any failures before proceeding.
+
+Do not make integration execution conditional on whether an integration test happened to be written. If a required row has no test, stop and complete the test or leave the task In Progress with the blocker recorded. If a required command cannot run, capture the exact failure and mark execution blocked; never report the boundary as passing.
 
 If a test failure is ambiguous, use diagnostic failure routing (see below).
 
@@ -403,8 +408,15 @@ After all tasks are complete (or if interrupted), write:
 |-----------|-------|----------------------|
 | {path} | {count} | {brief description} |
 
-{If no integration tests: "No integration tests written — story does not
- touch component interactions."}
+If no integration tests were written, state why. Use "No integration test required" only when every relevant matrix row is classified unit-only with a reason. Otherwise, list the missing required tests and blockers; do not imply that no tests were needed.
+
+## Component Integration Evidence
+
+Carry forward every row marked integration-required in `02-plan.md` and record what was implemented and executed. Keep a missing test, command, or prerequisite visible as a gap.
+
+| Component / touched area | AC / case IDs and expected behavior | Boundary | Suite/test file | Command and working directory | Real dependencies vs. test doubles | Test result / blocker |
+|--------------------------|---------------------------|----------|-----------------|-------------------------------|----------------------------------|----------------------|
+| {component / behavior} | {AC/case IDs and concise expected outcome} | {interaction boundary} | {path} | {exact command and cwd} | {what runs for real and what is simulated} | {pass, fail, not run, or blocker} |
 
 ## Coverage Notes
 

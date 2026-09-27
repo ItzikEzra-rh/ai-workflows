@@ -22,6 +22,7 @@ review checkpoint before any code is written.
 - **Follow existing patterns.** The codebase context from `/ingest` shows how things are done in this project. Match those patterns.
 - **Be specific.** Name the files, functions, types, and packages. A plan that says "add a handler" without specifying where is too vague.
 - **Tests are part of the plan, not an afterthought.** The test strategy is designed alongside the implementation, not appended later.
+- **Account for every component and touched area.** Classify each expected change against the component's test guidance. Where a change crosses a component interaction boundary, plan an integration test in this implementation work and identify how it will be run. Unit-only coverage needs a reason; it cannot stand in for a required integration test.
 - **No scope reduction.** Don't simplify acceptance criteria or defer parts to "later."
 
 ## Process
@@ -43,7 +44,9 @@ Before writing the plan, create a mental map:
 - What existing types or interfaces need to be extended?
 - Which changes have dependencies on each other (ordering constraints)?
 - Where will tests live? What test patterns from neighboring code should be followed?
-- Are integration tests needed? (Yes, if the story touches component interactions like API-to-service, service-to-store, agent-to-server.)
+- For each affected component and touched behavior, what boundary does the test need to prove? Does that behavior cross a component interaction boundary such as API-to-service, service-to-store, or agent-to-server?
+- Which acceptance criteria and source test-case IDs cover each component row? What exact suite, command, working directory, real dependencies, test doubles, and prerequisites provide the evidence?
+- If a row needs only unit tests, why does it cross no component boundary? If an applicable suite, command, or environment is missing, what gap or implementation task addresses it?
 
 ### Step 3: Write the Implementation Plan
 
@@ -101,6 +104,16 @@ Write `.artifacts/implement/{jira-key}/02-plan.md` with this structure:
 - **What it validates:** {which component interactions}
 - **Test harness:** {which existing harness/helpers to use}
 - **Infrastructure:** {what's needed — e.g., "auto-started by make integration-test"}
+
+### Component Coverage Matrix
+
+Account for every expected component/touched area listed in `01-context.md`. Preserve its acceptance-criteria and test-case references; split a row when different behaviors cross different boundaries.
+
+| Component / touched area | AC / case IDs and expected behavior | Required tier and boundary | Suite/file | Exact command and working directory | Real dependencies vs. test doubles | Prerequisites / gap |
+|--------------------------|---------------------------|----------------------------|------------|-------------------------------------|----------------------------------|---------------------|
+| {component / behavior} | {AC/case IDs and concise expected outcome} | {integration + boundary, or unit-only with rationale} | {verified path or proposed path} | {verified command and cwd, or proposed/unknown} | {what runs for real and what is simulated} | {prerequisite, unresolved gap, or none} |
+
+Use a specific tier and boundary for every row. A unit-only row must explain why no component interaction is part of the change. Do not use a mocked interaction as evidence for an integration boundary. Verify commands against repository instructions; label proposed or unverified commands and identify what prevents execution readiness.
 
 ### Coverage Goals
 
@@ -161,6 +174,9 @@ Before presenting the plan, verify:
 - [ ] Test strategy covers all public interface behavioral paths
 - [ ] Each proposed component exposes enough public surface area that its significant behavioral paths can be tested without reaching into internals — if a component has a single entry point that orchestrates complex multi-step logic, consider decomposing it into smaller components with more testable interfaces
 - [ ] Integration tests are included when the story touches component interactions
+- [ ] Every expected component/touched area from `01-context.md` appears in the Component Coverage Matrix, with either a required integration boundary or a reasoned unit-only classification
+- [ ] Each required integration row identifies a suite, command and working directory, real versus simulated dependencies, and prerequisites; unknowns are explicit gaps, not assumed coverage
+- [ ] Acceptance criteria and source test-case IDs remain traceable to the planned tests
 - [ ] File paths are specific (not "somewhere in internal/")
 - [ ] Commit messages follow the project's format (from validation profile)
 - [ ] No tasks modify code outside the story's scope
